@@ -25,6 +25,7 @@ Node *newNode() {
     node->isLeaf = 0;
     node->registerNumber = -1;
     return (node);
+
 }
 
 char *substring(char *string, int position, int length) {
@@ -46,6 +47,18 @@ char *substring(char *string, int position, int length) {
     return p;
 }
 
+char *delBrackets(char *name) {
+    int start = 0;
+    while (start < strlen(name) && name[start] == '(' || name[start] == ')') {
+        start++;
+    }
+    int end = strlen(name) - 1;
+    while (end >= 0 && name[end] == ')' || name[end] == '(') {
+        end--;
+    }
+    return substring(name, start + 1, end - start + 1);
+}
+
 void initializeRoot() {
     root = newNode();
 }
@@ -64,7 +77,7 @@ int getPriority(char operation) {
         case '%':
             return 1;
         default:
-            return -1;
+            return -101;
     }
 }
 //strcmp-comparator for char*
@@ -96,26 +109,30 @@ int firstFreeRegister() {
     return -1;
 }
 
+void print() {
+    printf("Iam here!");
+}
+
 void makeTree(char *expression, Node *current, int start, int finish) {
-    int minPriority = 0;
+    int minPriority = -100;
     int index = -1;
     int bracketsCount = 0;
-    int notSingleMinus;
+    int singleMinus;
     for (int i = start; i < finish; i++) {
-//                    if (expression.charAt(i) == '(') {
-//                bracketsCount++;
-//            } else if (expression.charAt(i) == ')') {
-//                bracketsCount--;
-//            }
-        //TODO: brackets processing
-        notSingleMinus = expression[i] == '-' && (i != start && getPriority(expression[i - 1]) == 1);
-        if (bracketsCount == 0 && !notSingleMinus && getPriority(expression[i]) >= minPriority) {
-            minPriority = getPriority(expression[i]);
-            index = i;
+        if (expression[i] == '(') {
+            bracketsCount++;
+        } else if (expression[i] == ')') {
+            bracketsCount--;
+        } else {
+            singleMinus = expression[i] == '-' && (i != start && getPriority(expression[i - 1]) == 1);
+            if (!singleMinus && getPriority(expression[i]) - bracketsCount * 2 >= minPriority) {
+                minPriority = getPriority(expression[i]) - bracketsCount * 2;
+                index = i;
+            }
         }
     }
     if (index == -1) {
-        current->data = substring(expression, start + 1, finish - start);
+        current->data = delBrackets(substring(expression, start + 1, finish - start));
         current->isLeaf = 1;
     }
     if (index != -1) {
@@ -213,12 +230,10 @@ void printSyntaxTree() {
 int main() {
     char *expression = "a-b-c-d*-1";
     expression = "aab*asd+32/12*sdd+11+1+4%2";
-    expression="1*aa+c+1+2+3%df*asd+zx-a+1311-0";
+    expression = "1*aa+c+1+2+3%df*asd+zx-a+1311-0";
+    expression = "(13+(12)*-1*(((1+a)*(ba+23))))*-1";
     buildTree(expression);
     setResultName("result");
     printSyntaxTree();
-
-//    int a=1==-1;
-//    printf("%d", a);
     return 0;
 }
